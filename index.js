@@ -2,9 +2,24 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
+const mongoose = require("mongoose");
+
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("✅ MongoDB connecté"))
+  .catch((error) =>
+    console.error("❌ Erreur de connexion MongoDB :", error.message)
+  );
 
 const app = express();
+app.use(express.json());
 app.use(cors());
+
+const userRoutes = require("./routes/user");
+app.use(userRoutes);
 
 const MARVEL_API_URL = "https://lereacteur-marvel-api.herokuapp.com";
 const API_KEY = process.env.MARVEL_API_KEY;
