@@ -4,7 +4,6 @@ const cors = require("cors");
 const axios = require("axios");
 const mongoose = require("mongoose");
 
-// 📌 Connexion à MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connecté avec succès"))
@@ -16,14 +15,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 📌 Import des routes utilisateur
 const userRoutes = require("./routes/user");
 app.use(userRoutes);
 
 const MARVEL_API_URL = "https://lereacteur-marvel-api.herokuapp.com";
 const API_KEY = process.env.MARVEL_API_KEY;
 
-// 📌 Routes Marvel API
 app.get("/characters", async (req, res) => {
   try {
     const { limit = 100, skip = 0, name } = req.query;
@@ -90,7 +87,6 @@ app.get("/comic/:comicId", async (req, res) => {
   }
 });
 
-// 📌 Lancement du serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✅ Serveur backend opérationnel sur le port ${PORT}`);

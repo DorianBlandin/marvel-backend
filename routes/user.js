@@ -5,7 +5,6 @@ const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
 
-// 📌 Route d'inscription (Signup)
 router.post("/signup", async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -32,7 +31,6 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// 📌 Route de connexion (Login)
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
