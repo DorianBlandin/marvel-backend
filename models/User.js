@@ -5,6 +5,14 @@ const UserSchema = new mongoose.Schema({
   hash: { type: String, required: true },
   salt: { type: String, required: true },
   token: { type: String, required: true },
+  favoriteCharacters: {
+    type: [Object],
+    default: [],
+  },
+  favoriteComics: {
+    type: [Object],
+    default: [],
+  },
 });
 
 const User = mongoose.model("User", UserSchema);

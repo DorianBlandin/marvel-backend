@@ -4,6 +4,7 @@ const User = require("../models/User");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
+const isAuthenticated = require("../middlewares/isAuthenticated");
 
 router.post("/signup", async (req, res) => {
   try {
@@ -30,7 +31,6 @@ router.post("/signup", async (req, res) => {
       _id: newUser._id,
     });
   } catch (error) {
-    console.error("❌ Erreur lors de l'inscription :", error);
     res.status(500).json({ message: "Erreur serveur." });
   }
 });
@@ -49,9 +49,6 @@ router.post("/login", async (req, res) => {
     }
 
     const hash = SHA256(password + user.salt).toString(encBase64);
-    console.log("🔍 Hash attendu :", user.hash);
-    console.log("🔍 Hash reçu :", hash);
-
     if (hash !== user.hash) {
       return res.status(400).json({ message: "Mot de passe incorrect." });
     }
@@ -61,55 +58,71 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur." });
   }
 });
-router.post("/favorites", async (req, res) => {
-  try {
-    const { token, item } = req.body;
 
-    const user = await User.findOne({ token });
-    if (!user) {
-      return res.status(401).json({ message: "Utilisateur non trouvé." });
+router.post("/favorites", isAuthenticated, async (req, res) => {
+  try {
+    const { item, type } = req.body;
+    const user = req.user;
+
+    if (!item || !type) {
+      return res.status(400).json({ message: "Item ou type manquant." });
     }
 
-    const isFavorite = user.favorites.some((fav) => fav._id === item._id);
-    if (!isFavorite) {
-      user.favorites.push(item);
+    const list =
+      type === "character" ? user.favoriteCharacters : user.favoriteComics;
+
+    const isAlreadyFavorite = list.some((fav) => fav._id === item._id);
+    if (!isAlreadyFavorite) {
+      list.push(item);
       await user.save();
     }
 
-    res.json(user.favorites);
+    res.json({
+      favoriteCharacters: user.favoriteCharacters,
+      favoriteComics: user.favoriteComics,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-router.get("/favorites", async (req, res) => {
+router.post("/favorites/remove", isAuthenticated, async (req, res) => {
   try {
-    const { token } = req.query;
+    const { itemId, type } = req.body;
+    const user = req.user;
 
-    const user = await User.findOne({ token });
-    if (!user) {
-      return res.status(401).json({ message: "Utilisateur non trouvé." });
+    if (!itemId || !type) {
+      return res.status(400).json({ message: "itemId ou type manquant." });
     }
 
-    res.json(user.favorites);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-router.post("/favorites/remove", async (req, res) => {
-  try {
-    const { token, itemId } = req.body;
-
-    const user = await User.findOne({ token });
-    if (!user) {
-      return res.status(401).json({ message: "Utilisateur non trouvé." });
+    if (type === "character") {
+      user.favoriteCharacters = user.favoriteCharacters.filter(
+        (fav) => fav._id !== itemId
+      );
+    } else if (type === "comic") {
+      user.favoriteComics = user.favoriteComics.filter(
+        (fav) => fav._id !== itemId
+      );
     }
 
-    user.favorites = user.favorites.filter((fav) => fav._id !== itemId);
     await user.save();
 
-    res.json(user.favorites);
+    res.json({
+      favoriteCharacters: user.favoriteCharacters,
+      favoriteComics: user.favoriteComics,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/favorites", isAuthenticated, async (req, res) => {
+  try {
+    const user = req.user;
+    res.json({
+      favoriteCharacters: user.favoriteCharacters,
+      favoriteComics: user.favoriteComics,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
