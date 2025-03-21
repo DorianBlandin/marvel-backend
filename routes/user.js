@@ -61,28 +61,44 @@ router.post("/login", async (req, res) => {
 
 router.post("/favorites", isAuthenticated, async (req, res) => {
   try {
-    const { item, type } = req.body;
-    const user = req.user;
+    const { token, item, type } = req.body;
 
-    if (!item || !type) {
-      return res.status(400).json({ message: "Item ou type manquant." });
+    if (!token || !item || !type) {
+      return res.status(400).json({ message: "Données manquantes." });
     }
 
-    const list =
-      type === "character" ? user.favoriteCharacters : user.favoriteComics;
+    const user = await User.findOne({ token });
 
-    const isAlreadyFavorite = list.some((fav) => fav._id === item._id);
-    if (!isAlreadyFavorite) {
-      list.push(item);
-      await user.save();
+    if (!user) {
+      return res.status(401).json({ message: "Utilisateur non trouvé." });
     }
+
+    let favoritesArray;
+    if (type === "character") {
+      favoritesArray = user.favoriteCharacters;
+    } else if (type === "comic") {
+      favoritesArray = user.favoriteComics;
+    } else {
+      return res.status(400).json({ message: "Type invalide." });
+    }
+
+    const index = favoritesArray.findIndex((fav) => fav._id === item._id);
+
+    if (index !== -1) {
+      favoritesArray.splice(index, 1);
+    } else {
+      favoritesArray.push(item);
+    }
+
+    await user.save();
 
     res.json({
       favoriteCharacters: user.favoriteCharacters,
       favoriteComics: user.favoriteComics,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Erreur lors de la mise à jour des favoris :", error);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
