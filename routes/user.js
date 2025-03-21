@@ -7,9 +7,9 @@ const uid2 = require("uid2");
 
 router.post("/signup", async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !username || !password) {
+    if (!email || !password) {
       return res.status(400).json({ message: "Tous les champs sont requis." });
     }
 
@@ -22,13 +22,12 @@ router.post("/signup", async (req, res) => {
     const hash = SHA256(password + salt).toString(encBase64);
     const token = uid2(32);
 
-    const newUser = new User({ email, username, salt, hash, token });
+    const newUser = new User({ email, salt, hash, token });
     await newUser.save();
 
     res.status(201).json({
       token: newUser.token,
       _id: newUser._id,
-      username: newUser.username,
     });
   } catch (error) {
     console.error("❌ Erreur lors de l'inscription :", error);
@@ -57,7 +56,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Mot de passe incorrect." });
     }
 
-    res.json({ token: user.token, _id: user._id, username: user.username });
+    res.json({ token: user.token, _id: user._id });
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur." });
   }
