@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(cors());
 
 const userRoutes = require("./routes/user");
-app.use(userRoutes);
+app.use("user/", userRoutes);
 
 const MARVEL_API_URL = "https://lereacteur-marvel-api.herokuapp.com";
 const API_KEY = process.env.MARVEL_API_KEY;
