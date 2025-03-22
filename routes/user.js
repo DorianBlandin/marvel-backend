@@ -59,7 +59,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/favorites", isAuthenticated, async (req, res) => {
+router.post("/favorites", async (req, res) => {
   try {
     const { token, item, type } = req.body;
 
